@@ -1,71 +1,47 @@
-
+#include "CPU.cpp"
+#include "Mem.cpp"
+#include "emu.cpp"
+#include "IO.cpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 
+#include <iostream>     // std::cout
+#include <fstream>
+
+
+
+using namespace std;
+
 int main(int argc, char *argv[])
 {
+    int speed = 700;
 
-    // returns zero on success else non-zero
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        printf("error initializing SDL: %s\n", SDL_GetError());
+    FILE* rom = fopen("/home/annas/CLionProjects/chip8/src/roms/PONG.ch8", "rb");
+    if (rom == NULL) {
+        std::cerr << "Failed to open ROM" << std::endl;
+        return -1;
     }
 
-    SDL_Window* win = SDL_CreateWindow("GAME", // creates a window
-                                       SDL_WINDOWPOS_CENTERED,
-                                       SDL_WINDOWPOS_CENTERED,
-                                       1000, 1000, 0);
+    fseek(rom, 0, SEEK_END);
+    long rom_size = ftell(rom);
+    rewind(rom);
 
-    int close = 0;
+    char *buffer = new char[rom_size];
 
-    // animation loop
-    while (!close) {
-        SDL_Event event;
-        // Events management
-        while (SDL_PollEvent(&event)) {
-
-            switch (event.type) {
-
-                case SDL_QUIT:
-                    // handling of close button
-                    close = 1;
-                    break;
-
-                case SDL_KEYDOWN:
-
-                    // keyboard API for key pressedhhhhhhhhhhhhhhh
-                    switch (event.key.keysym.scancode) {
-                        case SDL_SCANCODE_W:
-                        case SDL_SCANCODE_UP:
-                            printf("up");
-                            break;
-                        case SDL_SCANCODE_A:
-                        case SDL_SCANCODE_LEFT:
-                            printf("left");
-                            break;
-                        case SDL_SCANCODE_S:
-                        case SDL_SCANCODE_DOWN:
-                            printf("down");
-                            break;
-                        case SDL_SCANCODE_D:
-                        case SDL_SCANCODE_RIGHT:
-                            printf("right");
-                            break;
-                        default:
-                            break;
-                    }
-            }
-        }
-
-
-
-        // calculates to 60 fps
-        SDL_Delay(1000 / 60);
+    size_t result = fread(buffer, sizeof(char), (size_t)rom_size, rom);
+    if (result != rom_size) {
+        std::cerr << "Failed to read ROM" << std::endl;
+        return false;
     }
 
-    // destroy texture
 
-    // close SDL
-    SDL_Quit();
+    emu test = emu(IO(), CPU(), Mem(buffer, rom_size));
+    fclose(rom);
+    free(buffer);
+
+    test.emu_run();
+
+
 
     return 0;
 }
