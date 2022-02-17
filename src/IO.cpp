@@ -85,6 +85,17 @@ void IO::input(CPU *cpu){
         }
 
     }
+}
 
-
+void IO::DrawScreen(const bool *display){
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 64, 32);
+    SDL_SetRenderTarget(renderer,texture);
+    for (int i = 0; i < 64; ++i)
+        for (int j = 0; j < 32; j++){
+            if(display[i+(j*64)]){
+                SDL_RenderDrawPoint(this->renderer, i, j);
+            }
+        }
+    SDL_RenderPresent(renderer);
 }

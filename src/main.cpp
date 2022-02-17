@@ -16,32 +16,25 @@ int main(int argc, char *argv[])
 {
     int speed = 700;
 
-    FILE* rom = fopen("/home/annas/CLionProjects/chip8/src/roms/PONG.ch8", "rb");
-    if (rom == NULL) {
-        std::cerr << "Failed to open ROM" << std::endl;
-        return -1;
+    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/SCTEST.CH8", std::ios::binary | std::ios::ate);
+
+    if (file.is_open())
+    {
+        // Get size of file and allocate a buffer to hold the contents
+        std::streampos size = file.tellg();
+        char* buffer = new char[size];
+
+        // Go back to the beginning of the file and fill the buffer
+        file.seekg(0, std::ios::beg);
+        file.read(buffer, size);
+        file.close();
+
+        emu test = emu(CPU(), Mem(buffer, size));
+        printf("%i\n",size);
+        test.emu_run();
+
+        delete[] buffer;
     }
-
-    fseek(rom, 0, SEEK_END);
-    long rom_size = ftell(rom);
-    rewind(rom);
-
-    char *buffer = new char[rom_size];
-
-    size_t result = fread(buffer, sizeof(char), (size_t)rom_size, rom);
-    if (result != rom_size) {
-        std::cerr << "Failed to read ROM" << std::endl;
-        return false;
-    }
-
-
-    emu test = emu(IO(), CPU(), Mem(buffer, rom_size));
-    fclose(rom);
-    free(buffer);
-
-    test.emu_run();
-
-
 
     return 0;
 }

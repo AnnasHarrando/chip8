@@ -8,12 +8,13 @@
 #include <stack>
 #include <array>
 #include "Mem.h"
+#include <iostream>
 
 class CPU {
 public:
 
-    int pc = 0x200;
-    uint8_t I = 0;
+    uint16_t pc = 0x200;
+    uint16_t I = 0;
     uint8_t regs[16] = {};
     std::stack<uint16_t> stack;
     uint8_t delay_timer = 0;
@@ -21,6 +22,8 @@ public:
     bool keys[16] = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
     int last_key = 16;
     bool display[64*32] = { };
+
+
     void GetKey(int key,bool boo);
 
     void ResetKeys();

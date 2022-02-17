@@ -18,107 +18,122 @@ void CPU::ResetKeys(){
 }
 
 void CPU::fetch(Mem mem){
-    uint16_t opcode =  (mem.read(pc) << 8) | mem.read(pc+1) ;
-    printf("%X\n",opcode);
+    uint16_t opcode = mem.ram[pc+1] << 8u | mem.ram[pc] ;
+    uint8_t OOON = opcode & 0xF;
+    uint8_t OONO = (opcode & 0xFF)>>4;
+    uint8_t ONOO = (opcode & 0xFFF)>>8;
+    uint8_t NOOO = (opcode & 0xFFFF)>>12;
+    uint8_t ONNO = (opcode & 0xFFF)>>4;
+    uint16_t NNNO = (opcode & 0x0FFFu);
+    uint8_t NNOO = (opcode & 0x00FFu);
+
+    printf("%04X ", opcode);
+    printf("%X ",opcode & 0xF);
+    printf("%X ",(opcode & 0xFF)>>4);
+    printf("%X ",(opcode & 0xFFF)>>8);
+    printf("%X ",(opcode & 0xFFFF)>>12);
+    printf("%i ", pc);
+    printf("%i \n", I);
+    printf("0NN0 :%02X ",ONNO);
+    printf("0NNN :%03X ",NNNO);
+    printf("00NN :%02X \n",NNOO);
+
 
     pc += 2;
-
     int i,j;
-    int x = regs[opcode & 0xF0] & 63;
-    int y = regs[opcode & 0xF00] & 31;
-    switch(opcode & 0xF){
+    int x = regs[OONO] & 63;
+    int y = regs[ONOO] & 31;
+
+    switch(OOON){
         case (0x0):
-            if((opcode & 0xF000) == 0) {
+            if(NOOO == 0) {
                 for (i = 0; i < 2048; i++) {
                     display[i] = false;
                 }
             }
-            else{
+            else if(NOOO == 0xE) {
                 pc = stack.top();
                 stack.pop();
             }
-
             break;
         case (0x1):
-            pc = opcode & 0xFFF;
+            pc = NNNO;
             break;
         case (0x2):
             stack.push(pc);
-            pc = opcode & 0xFFF;
+            pc = NNNO;
             break;
         case (0x3):
-            if(regs[opcode & 0xF00] == (opcode & 0xFF00)) pc += 2;
+            if(regs[OONO] == NNOO) pc += 2;
             break;
         case (0x4):
-            if(!regs[opcode & 0xF00] == (opcode & 0xFF00)) pc += 2;
+            if(!(regs[OONO] == NNOO)) pc += 2;
             break;
         case (0x5):
-            if(regs[opcode & 0xF0] == regs[opcode & 0xF00]) pc += 2;
+            if(regs[ONOO] == regs[OONO]) pc += 2;
             break;
         case (0x6):
-            regs[opcode & 0xF0] = (opcode & 0xFF00);
+            regs[OONO] = (NNOO);
             break;
         case (0x7):
-            regs[opcode & 0xF0] += (opcode & 0xFF00);
+            regs[OONO] += (NNOO);
             break;
         case (0x8):
-            switch (opcode & 0xF000) {
+            switch (NOOO) {
                 case (0x0):
-                    regs[opcode & 0xF0] = regs[opcode & 0xF00];
+                    regs[OONO] = regs[ONOO];
                     break;
                 case (0x1):
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0] | regs[opcode & 0xF00];
+                    regs[OONO] = regs[OONO] | regs[OONO];
                     break;
                 case (0x2):
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0] & regs[opcode & 0xF00];
+                    regs[OONO] = regs[ONOO] & regs[OONO];
                     break;
                 case (0x3):
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0] ^ regs[opcode & 0xF00];
+                    regs[OONO] = regs[ONOO] ^ regs[OONO];
                     break;
                 case (0x4):
-                    if (regs[opcode & 0xF0] + regs[opcode & 0xF00] > 255) regs[15] = 1;
+                    if (regs[OONO] + regs[ONOO] > 255) regs[15] = 1;
                     else regs[15] = 0;
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0] + regs[opcode & 0xF00];
+                    regs[OONO] = regs[ONOO] + regs[OONO];
                     break;
                 case (0x5):
-                    if(regs[opcode & 0xF0] > regs[opcode & 0xF00]) regs[15] = 1;
+                    if(regs[OONO] > regs[ONOO]) regs[15] = 1;
                     else regs[15] = 0;
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0] - regs[opcode & 0xF00];
+                    regs[OONO] = regs[OONO] - regs[ONOO];
                     break;
                 case (0x6):
-                    regs[15] = regs[opcode & 0xF0] & 0x1;
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0]>>1;
+                    regs[15] = regs[OONO] & 0x1;
+                    regs[OONO] = regs[OONO]>>1;
                     break;
                 case (0x7):
-                    if(regs[opcode & 0xF0] < regs[opcode & 0xF00]) regs[15] = 1;
+                    if(regs[ONOO] < regs[OONO]) regs[15] = 1;
                     else regs[15] = 0;
-                    regs[opcode & 0xF0] = regs[opcode & 0xF00] - regs[opcode & 0xF0];
+                    regs[OONO] = regs[ONOO] - regs[OONO];
                     break;
                 case (0xE):
-                    regs[15] = regs[opcode & 0xF0] & 0xD0;
-                    regs[opcode & 0xF0] = regs[opcode & 0xF0]<<1;
+                    regs[15] = regs[OONO] & 0xD0;
+                    regs[OONO] = regs[OONO]<<1;
                     break;
                 default:
-                    printf("opcode not implemented\n");
-                    printf("%X",opcode);
-                    exit(-1);
+                    break;
             }
         case (0x9):
-            if(regs[opcode & 0xF0] == regs[opcode & 0xF00]) pc += 2;
+            if(regs[ONOO] == regs[OONO]) pc += 2;
             break;
         case (0xA):
-            I = opcode & 0xFFF0;
+            I = NNNO;
             break;
         case (0xB):
-            pc = (opcode & 0xFFF0) + regs[0];
+            pc = NNNO + regs[0];
             break;
         case (0xC):
             srand (time(NULL));
-            regs[opcode & 0xF0] = rand() | (opcode & 0xFF00);
+            regs[OONO] = rand() | NNOO;
             break;
         case (0xD):
             regs[15] = 0;
-            for(i = 0; i < (opcode & 0xF000); i++){
+            for(i = 0; i < (NOOO); i++){
                 uint8_t sprite = mem.read(I+i);
                 for(j = 0; j < 8; j++){
                     if(x+j > 31) goto exit_loop;;
@@ -141,56 +156,51 @@ void CPU::fetch(Mem mem){
             }
             break;
         case (0xE):
-            if((opcode & 0xF000) == 0x1){
-                if(!keys[regs[opcode & 0xF0]]) pc += 2;
+            if(NOOO == 0x1){
+                if(!keys[regs[OONO]]) pc += 2;
             }
             else{
-                if(keys[regs[opcode & 0xF0]]) pc += 2;
+                if(keys[regs[OONO]]) pc += 2;
             }
             break;
         case(0xF):
-            switch(opcode & 0xF000){
+            switch(NOOO){
                 case(0x3):
-                    I = (regs[opcode & 0xF0] / 100 << 16) | (regs[opcode & 0xF0] / 10 << 8) | regs[opcode & 0xF0];
+                    I = (regs[OONO] / 100 << 16) | (regs[OONO] / 10 << 8) | regs[OONO];
                     break;
                 case(0x5):
-                    if((opcode & 0xF00) == 0x1) delay_timer = regs[opcode & 0xF0];
-                    else if ((opcode & 0xF00) == 0x5){
+                    if(ONOO == 0x1) delay_timer = regs[OONO];
+                    else if (ONOO == 0x5){
                         for(i = 0; i < 16; i++) mem.write(I+i,regs[i]);
                     }
-                    else if ((opcode & 0xF00) == 0x6){
+                    else if (ONOO == 0x6){
                         for(i = 0; i < 16; i++) regs[i] = mem.read(I+i);
-                    }
-                    else{
-                        printf("opcode not implemented\n");
-                        printf("%X",opcode);
-                        exit(-1);
                     }
                     break;
                 case(0x7):
-                    regs[opcode & 0xF0] = delay_timer;
+                    regs[OONO] = delay_timer;
                     break;
                 case (0x8):
-                    sound_timer = regs[opcode & 0xF0];
+                    sound_timer = regs[OONO];
                     break;
                 case (0x9):
-                    I = 80 + regs[opcode & 0xF0]*5;
+                    I = 80 + regs[OONO]*5;
                     break;
                 case (0xA):
                     if(last_key < 16){
-                        regs[opcode & 0xF0] = last_key;
+                        regs[OONO] = last_key;
                     }
                     else pc -= 2;
                     break;
                 case (0xE):
-                    I += regs[opcode & 0xF0];
+                    I += regs[OONO];
+                    break;
+                default:
                     break;
             }
         break;
         default:
-            printf("opcode not implemented\n");
-            printf("%X",opcode);
-            exit(-1);
+            break;
     }
 
 
