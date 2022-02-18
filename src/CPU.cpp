@@ -28,7 +28,7 @@ void CPU::fetch(Mem mem){
     uint16_t NNOO = opcode & 0x00FF;
 
 
-
+   // printf("%04X\n",opcode);
 
     pc += 2;
     int i,j;
@@ -131,7 +131,6 @@ void CPU::fetch(Mem mem){
                 for(j = 0; j < 8; j++){
 
                     if(sprite & (0x80 >> j)){
-                        printf("yessir\n");
                         if(display[y][x+j]){
                             display[y][x+j] = false;
                             regs[15] = 1;
@@ -141,7 +140,6 @@ void CPU::fetch(Mem mem){
                             regs[15] = 0;
                         }
                     }
-                    else printf("damn\n");
                 }
 
                 y += 1;
@@ -158,14 +156,19 @@ void CPU::fetch(Mem mem){
         case(0xF000):
             switch(NOOO){
                 case(0x0003):
-                    mem.write(I,regs[OONO] / 100);
-                    mem.write(I+1,(regs[OONO] / 10) % 10);
-                    mem.write(I+2,regs[OONO] %10);
+                   // printf("%04X %i %i %i %i %i",opcode, OONO,regs[OONO],regs[OONO] / 100,(regs[OONO] / 10) % 10,regs[OONO] %10);
+                    mem.ram[I,(uint8_t)regs[OONO] / 100];
+                    mem.ram[I+1,(uint8_t)(regs[OONO] / 10) % 10];
+                    mem.ram[I+2,(uint8_t)(regs[OONO]%100) %10];
                     break;
                 case(0x0005):
                     if(NNOO == 0x0015) delay_timer = regs[OONO];
                     else if (NNOO == 0x0055){
-                        for(i = 0; i <= (int)OONO; i++) mem.ram[I+i] = regs[i];
+
+                        for(i = 0; i <= (int)OONO; i++) {
+                            mem.ram[I+i] = regs[i];
+                           // printf("%i\n",i);
+                        }
                     }
                     else if (NNOO == 0x0065){
                         for(i = 0; i <= (int)OONO; i++) regs[i] = mem.ram[I+i];

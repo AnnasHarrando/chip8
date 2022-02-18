@@ -4,6 +4,7 @@
 #include "Mem.h"
 #include "IO.h"
 #include "CPU.h"
+#include "Timer.cpp"
 
 class emu {
 public:
@@ -11,6 +12,7 @@ public:
     CPU cpu;
     ///IO io;
     Mem mem;
+    Timer t = Timer();
     bool running = true;
 
     SDL_Window* win;
@@ -44,20 +46,19 @@ public:
 
 
 void emu::emu_run(){
-
+    t.start();
     while(running){
         input(&cpu);
         cpu.fetch(mem);
         DrawScreen(cpu.display);
-        for(int i=0;i<64;i++){
-            for(int j=0;j<32;j++){
-                if(cpu.display[j][i]) printf("%c", (char)254u);
-                else printf(" ");
-            }
-            printf("\n");
-        }
+        SDL_Delay(10);
 
-        SDL_Delay(50);
+        if(t.elapsedTime() > 0.0016){
+            if(cpu.delay_timer > 0) cpu.delay_timer--;
+            if(cpu.sound_timer > 0) cpu.sound_timer--;
+            t = Timer();
+            t.start();
+        }
     }
 }
 
