@@ -21,7 +21,7 @@ public:
     uint8_t sound_timer = 0;
     bool keys[16] = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
     int last_key = 16;
-    bool display[64*32] = { };
+    bool display[32][64] = {};
 
 
     void GetKey(int key,bool boo);

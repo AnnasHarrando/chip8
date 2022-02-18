@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
     int speed = 700;
 
-    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/SCTEST.CH8", std::ios::binary | std::ios::ate);
+    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/test_opcode.ch8", std::ios::binary | std::ios::ate);
 
     if (file.is_open())
     {

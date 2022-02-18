@@ -13,7 +13,7 @@
 class Mem {
 public:
 
-    uint8_t *ram = new uint8_t[4096];
+    uint8_t ram[4096] = {0};
 
     uint8_t fonts [5*16] = {0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
                             0x20, 0x60, 0x20, 0x20, 0x70, // 1

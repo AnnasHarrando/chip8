@@ -18,25 +18,16 @@ void CPU::ResetKeys(){
 }
 
 void CPU::fetch(Mem mem){
-    uint16_t opcode = mem.ram[pc+1] << 8u | mem.ram[pc] ;
-    uint8_t OOON = opcode & 0xF;
-    uint8_t OONO = (opcode & 0xFF)>>4;
-    uint8_t ONOO = (opcode & 0xFFF)>>8;
-    uint8_t NOOO = (opcode & 0xFFFF)>>12;
-    uint8_t ONNO = (opcode & 0xFFF)>>4;
-    uint16_t NNNO = (opcode & 0x0FFFu);
-    uint8_t NNOO = (opcode & 0x00FFu);
+    uint16_t opcode = mem.ram[pc] << 8u | mem.ram[pc+1] ;
+    uint16_t OOON = opcode & 0xF000;
+    uint16_t OONO = (opcode & 0x0F00)>>8;
+    uint16_t ONOO = (opcode & 0x00F0)>>4;
+    uint16_t NOOO = opcode & 0x000F;
+    uint16_t ONNO = opcode & 0x0FF0;
+    uint16_t NNNO = opcode & 0x0FFF;
+    uint16_t NNOO = opcode & 0x00FF;
 
-    printf("%04X ", opcode);
-    printf("%X ",opcode & 0xF);
-    printf("%X ",(opcode & 0xFF)>>4);
-    printf("%X ",(opcode & 0xFFF)>>8);
-    printf("%X ",(opcode & 0xFFFF)>>12);
-    printf("%i ", pc);
-    printf("%i \n", I);
-    printf("0NN0 :%02X ",ONNO);
-    printf("0NNN :%03X ",NNNO);
-    printf("00NN :%02X \n",NNOO);
+
 
 
     pc += 2;
@@ -45,154 +36,157 @@ void CPU::fetch(Mem mem){
     int y = regs[ONOO] & 31;
 
     switch(OOON){
-        case (0x0):
-            if(NOOO == 0) {
-                for (i = 0; i < 2048; i++) {
-                    display[i] = false;
+        case (0x0000):
+            if(NOOO == 0x0000) {
+                for (i = 0; i < 64; i++) {
+                    for (j - 0; j < 32;j++){
+                        display[j][i] = false;
+                    }
                 }
             }
-            else if(NOOO == 0xE) {
+            else if(NOOO == 0x000E) {
                 pc = stack.top();
                 stack.pop();
             }
             break;
-        case (0x1):
+        case (0x1000):
             pc = NNNO;
             break;
-        case (0x2):
+        case (0x2000):
             stack.push(pc);
             pc = NNNO;
             break;
-        case (0x3):
+        case (0x3000):
             if(regs[OONO] == NNOO) pc += 2;
             break;
-        case (0x4):
-            if(!(regs[OONO] == NNOO)) pc += 2;
+        case (0x4000):
+            if(regs[OONO] != NNOO) pc += 2;
             break;
-        case (0x5):
+        case (0x5000):
             if(regs[ONOO] == regs[OONO]) pc += 2;
             break;
-        case (0x6):
+        case (0x6000):
             regs[OONO] = (NNOO);
             break;
-        case (0x7):
+        case (0x7000):
             regs[OONO] += (NNOO);
             break;
-        case (0x8):
+        case (0x8000):
             switch (NOOO) {
-                case (0x0):
+                case (0x0000):
                     regs[OONO] = regs[ONOO];
                     break;
-                case (0x1):
-                    regs[OONO] = regs[OONO] | regs[OONO];
+                case (0x0001):
+                    regs[OONO] = regs[OONO] | regs[ONOO];
                     break;
-                case (0x2):
-                    regs[OONO] = regs[ONOO] & regs[OONO];
+                case (0x0002):
+                    regs[OONO] = regs[OONO] & regs[ONOO];
                     break;
-                case (0x3):
-                    regs[OONO] = regs[ONOO] ^ regs[OONO];
+                case (0x0003):
+                    regs[OONO] = regs[ONOO] ^ regs[ONOO];
                     break;
-                case (0x4):
+                case (0x0004):
                     if (regs[OONO] + regs[ONOO] > 255) regs[15] = 1;
                     else regs[15] = 0;
                     regs[OONO] = regs[ONOO] + regs[OONO];
                     break;
-                case (0x5):
+                case (0x0005):
                     if(regs[OONO] > regs[ONOO]) regs[15] = 1;
                     else regs[15] = 0;
                     regs[OONO] = regs[OONO] - regs[ONOO];
                     break;
-                case (0x6):
-                    regs[15] = regs[OONO] & 0x1;
+                case (0x0006):
+                    regs[15] = regs[OONO] & 7;
                     regs[OONO] = regs[OONO]>>1;
                     break;
-                case (0x7):
+                case (0x0007):
                     if(regs[ONOO] < regs[OONO]) regs[15] = 1;
                     else regs[15] = 0;
                     regs[OONO] = regs[ONOO] - regs[OONO];
                     break;
-                case (0xE):
-                    regs[15] = regs[OONO] & 0xD0;
+                case (0x000E):
+                    regs[15] = regs[OONO] >> 7;
                     regs[OONO] = regs[OONO]<<1;
                     break;
                 default:
                     break;
             }
-        case (0x9):
-            if(regs[ONOO] == regs[OONO]) pc += 2;
+        case (0x9000):
+            if(regs[ONOO] != regs[OONO]) pc += 2;
             break;
-        case (0xA):
+        case (0xA000):
             I = NNNO;
             break;
-        case (0xB):
+        case (0xB000):
             pc = NNNO + regs[0];
             break;
-        case (0xC):
+        case (0xC000):
             srand (time(NULL));
             regs[OONO] = rand() | NNOO;
             break;
-        case (0xD):
+        case (0xD000):
             regs[15] = 0;
             for(i = 0; i < (NOOO); i++){
                 uint8_t sprite = mem.read(I+i);
                 for(j = 0; j < 8; j++){
-                    if(x+j > 31) goto exit_loop;;
-                    uint8_t bit = sprite & 0x1;
-                    bit = bit>>1;
-                    if(bit){
-                        if(display[(x+j)+(y*64)]){
-                            display[(x+j)+(y*64)] = false;
+
+                    if(sprite & (0x80 >> j)){
+                        printf("yessir\n");
+                        if(display[y][x+j]){
+                            display[y][x+j] = false;
                             regs[15] = 1;
                         }
                         else{
-                            display[(x+j)+(y*64)] = true;
+                            display[y][x+j] = true;
                             regs[15] = 0;
                         }
                     }
+                    else printf("damn\n");
                 }
-                exit_loop: ;
+
                 y += 1;
-                if(y > 31) break;
             }
             break;
-        case (0xE):
-            if(NOOO == 0x1){
+        case (0xE000):
+            if(NOOO == 0x0001){
                 if(!keys[regs[OONO]]) pc += 2;
             }
             else{
                 if(keys[regs[OONO]]) pc += 2;
             }
             break;
-        case(0xF):
+        case(0xF000):
             switch(NOOO){
-                case(0x3):
-                    I = (regs[OONO] / 100 << 16) | (regs[OONO] / 10 << 8) | regs[OONO];
+                case(0x0003):
+                    mem.write(I,regs[OONO] / 100);
+                    mem.write(I+1,(regs[OONO] / 10) % 10);
+                    mem.write(I+2,regs[OONO] %10);
                     break;
-                case(0x5):
-                    if(ONOO == 0x1) delay_timer = regs[OONO];
-                    else if (ONOO == 0x5){
-                        for(i = 0; i < 16; i++) mem.write(I+i,regs[i]);
+                case(0x0005):
+                    if(NNOO == 0x0015) delay_timer = regs[OONO];
+                    else if (NNOO == 0x0055){
+                        for(i = 0; i <= (int)OONO; i++) mem.ram[I+i] = regs[i];
                     }
-                    else if (ONOO == 0x6){
-                        for(i = 0; i < 16; i++) regs[i] = mem.read(I+i);
+                    else if (NNOO == 0x0065){
+                        for(i = 0; i <= (int)OONO; i++) regs[i] = mem.ram[I+i];
                     }
                     break;
-                case(0x7):
+                case(0x0007):
                     regs[OONO] = delay_timer;
                     break;
-                case (0x8):
+                case (0x0008):
                     sound_timer = regs[OONO];
                     break;
-                case (0x9):
+                case (0x0009):
                     I = 80 + regs[OONO]*5;
                     break;
-                case (0xA):
+                case (0x000A):
                     if(last_key < 16){
                         regs[OONO] = last_key;
                     }
                     else pc -= 2;
                     break;
-                case (0xE):
+                case (0x000E):
                     I += regs[OONO];
                     break;
                 default:

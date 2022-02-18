@@ -27,7 +27,7 @@ public:
         }
 
         win = SDL_CreateWindow("sdl2 pixel drawing",
-                               1000, 500,64, 32, 0);
+                               1000, 500,640, 320, 0);
         renderer = SDL_CreateRenderer(win,-1, SDL_RENDERER_ACCELERATED);
     }
 
@@ -37,7 +37,7 @@ public:
 
     void input(CPU *cpu);
 
-    void DrawScreen(const bool *display);
+    void DrawScreen(bool display[32][64]);
 };
 
 
@@ -49,18 +49,31 @@ void emu::emu_run(){
         input(&cpu);
         cpu.fetch(mem);
         DrawScreen(cpu.display);
-        SDL_Delay(200);
+        for(int i=0;i<64;i++){
+            for(int j=0;j<32;j++){
+                if(cpu.display[j][i]) printf("%c", (char)254u);
+                else printf(" ");
+            }
+            printf("\n");
+        }
+
+        SDL_Delay(50);
     }
 }
 
-void emu::DrawScreen(const bool *display){
+void emu::DrawScreen(bool display[32][64]){
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 64, 32);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 640, 320);
     SDL_SetRenderTarget(renderer,texture);
     for (int i = 0; i < 64; ++i)
         for (int j = 0; j < 32; j++){
-            if(display[i+(j*64)]) {
-                SDL_RenderDrawPoint(this->renderer, i, j);
+            if(display[j][i]) {
+                for(int k=0;k<10;k++){
+                    for(int l=0;l<10;l++){
+                        SDL_RenderDrawPoint(this->renderer, i*10+k, j*10+l);
+                    }
+
+                }
             }
         }
     SDL_RenderPresent(renderer);
