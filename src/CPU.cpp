@@ -1,34 +1,27 @@
 #include "CPU.h"
-#include "Mem.h"
+//#include "Mem.h"
 #include <stack>
 #include <iostream>
 #include <cstring>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include <sstream>
 
+using namespace std;
 
-void CPU::GetKey(int key, bool boo){
-    keys[key] = boo;
-}
-
-void CPU::ResetKeys(){
-    for(int i=0; i < 16;i++){
-        keys[i] = false;
-    };
-}
-
-void CPU::fetch(Mem mem){
-    uint16_t opcode = mem.ram[pc] << 8u | mem.ram[pc+1] ;
+void CPU::fetch(uint8_t *ram){
+    uint16_t opcode = ram[pc] << 8u | ram[pc+1] ;
     uint16_t OOON = opcode & 0xF000;
     uint16_t OONO = (opcode & 0x0F00)>>8;
     uint16_t ONOO = (opcode & 0x00F0)>>4;
     uint16_t NOOO = opcode & 0x000F;
-    uint16_t ONNO = opcode & 0x0FF0;
     uint16_t NNNO = opcode & 0x0FFF;
     uint16_t NNOO = opcode & 0x00FF;
 
 
-   // printf("%04X\n",opcode);
+    printf("%04X\n",opcode);
+    //printf("%i\n",regs[0xF]);
+    //printf("%i\n",regs[OONO]);
 
     pc += 2;
     int i,j;
@@ -39,14 +32,19 @@ void CPU::fetch(Mem mem){
         case (0x0000):
             if(NOOO == 0x0000) {
                 for (i = 0; i < 64; i++) {
-                    for (j - 0; j < 32;j++){
-                        display[j][i] = false;
+                    for (j = 0; j < 32;j++){
+                        display[j][i] = 0;
                     }
                 }
+                Drawflag = true;
             }
             else if(NOOO == 0x000E) {
                 pc = stack.top();
                 stack.pop();
+            }
+            else {
+                printf("unknown opcode %04X",opcode);
+                exit(3);
             }
             break;
         case (0x1000):
@@ -66,10 +64,10 @@ void CPU::fetch(Mem mem){
             if(regs[ONOO] == regs[OONO]) pc += 2;
             break;
         case (0x6000):
-            regs[OONO] = (NNOO);
+            regs[OONO] = NNOO;
             break;
         case (0x7000):
-            regs[OONO] += (NNOO);
+            regs[OONO] += NNOO;
             break;
         case (0x8000):
             switch (NOOO) {
@@ -77,38 +75,52 @@ void CPU::fetch(Mem mem){
                     regs[OONO] = regs[ONOO];
                     break;
                 case (0x0001):
-                    regs[OONO] = regs[OONO] | regs[ONOO];
+                    regs[OONO] |= regs[ONOO];
                     break;
                 case (0x0002):
-                    regs[OONO] = regs[OONO] & regs[ONOO];
+                    regs[OONO] &= regs[ONOO];
                     break;
                 case (0x0003):
-                    regs[OONO] = regs[ONOO] ^ regs[ONOO];
+                    printf("test\n");
+                    regs[OONO] ^= regs[ONOO];
                     break;
                 case (0x0004):
-                    if (regs[OONO] + regs[ONOO] > 255) regs[15] = 1;
-                    else regs[15] = 0;
-                    regs[OONO] = regs[ONOO] + regs[OONO];
+                    //printf("%i\n",regs[OONO]+regs[ONOO]);
+                {
+                    int temp = regs[OONO] + regs[ONOO];
+                    if (temp > 255) {
+                        regs[0xF] = 1;
+                    } else {
+                        regs[0xF] = 0;
+                    }
+                    regs[OONO] = temp & 0xFF;
+                }
                     break;
                 case (0x0005):
-                    if(regs[OONO] > regs[ONOO]) regs[15] = 1;
-                    else regs[15] = 0;
-                    regs[OONO] = regs[OONO] - regs[ONOO];
+
+                    if(regs[OONO] < regs[ONOO]) regs[0xF] = 0;
+                    else regs[0xF] = 1;
+                    regs[OONO] -= regs[ONOO];
+
                     break;
                 case (0x0006):
-                    regs[15] = regs[OONO] & 7;
+                    regs[0xF] = regs[OONO] & 0x1;
                     regs[OONO] = regs[OONO]>>1;
                     break;
                 case (0x0007):
-                    if(regs[ONOO] < regs[OONO]) regs[15] = 1;
-                    else regs[15] = 0;
+
+                    if(regs[ONOO] < regs[OONO]) regs[0xF] = 0;
+                    else regs[0xF] = 1;
                     regs[OONO] = regs[ONOO] - regs[OONO];
+
                     break;
                 case (0x000E):
-                    regs[15] = regs[OONO] >> 7;
+                    regs[0xF] = regs[OONO] >> 7;
                     regs[OONO] = regs[OONO]<<1;
                     break;
                 default:
+                    printf("unknown opcode %04X",opcode);
+                    exit(3);
                     break;
             }
         case (0x9000):
@@ -121,84 +133,99 @@ void CPU::fetch(Mem mem){
             pc = NNNO + regs[0];
             break;
         case (0xC000):
-            srand (time(NULL));
-            regs[OONO] = rand() | NNOO;
+            regs[OONO] = (rand() % (0xFF +1)) & NNOO;
             break;
         case (0xD000):
-            regs[15] = 0;
+            regs[0xF] = 0;
+
             for(i = 0; i < (NOOO); i++){
-                uint8_t sprite = mem.read(I+i);
+                uint8_t sprite = ram[I+i];
                 for(j = 0; j < 8; j++){
 
-                    if(sprite & (0x80 >> j)){
-                        if(display[y][x+j]){
-                            display[y][x+j] = false;
-                            regs[15] = 1;
+                    if((sprite & (0x80 >> j)) != 0){
+                        if(display[y+i][x+j] == 1){
+                            regs[0xF] = 1;
                         }
-                        else{
-                            display[y][x+j] = true;
-                            regs[15] = 0;
-                        }
+                        display[y+i][x+j] ^= 1;
                     }
                 }
 
-                y += 1;
             }
+            Drawflag = true;
             break;
         case (0xE000):
             if(NOOO == 0x0001){
                 if(!keys[regs[OONO]]) pc += 2;
             }
-            else{
+            else if (NOOO == 0x000E){
                 if(keys[regs[OONO]]) pc += 2;
+            }
+            else {
+            printf("unknown opcode %04X",opcode);
+            exit(3);
             }
             break;
         case(0xF000):
-            switch(NOOO){
-                case(0x0003):
-                   // printf("%04X %i %i %i %i %i",opcode, OONO,regs[OONO],regs[OONO] / 100,(regs[OONO] / 10) % 10,regs[OONO] %10);
-                    mem.ram[I,(uint8_t)regs[OONO] / 100];
-                    mem.ram[I+1,(uint8_t)(regs[OONO] / 10) % 10];
-                    mem.ram[I+2,(uint8_t)(regs[OONO]%100) %10];
+            switch(NNOO){
+                case(0x0033):
+                    ram[I] = regs[OONO] / 100;
+                    ram[I+1] = (regs[OONO] / 10) % 10;
+                    ram[I+2] = regs[OONO] % 10;
                     break;
-                case(0x0005):
-                    if(NNOO == 0x0015) delay_timer = regs[OONO];
-                    else if (NNOO == 0x0055){
-
-                        for(i = 0; i <= (int)OONO; i++) {
-                            mem.ram[I+i] = regs[i];
-                           // printf("%i\n",i);
-                        }
+                case(0x0015):
+                    delay_timer = regs[OONO];
+                    break;
+                case(0x0055):
+                    for(i = 0; i <= ((opcode & 0x0F00) >> 8); i++) {
+                        ram[I+i] = regs[i];
+                        //printf("%i\n",i);
                     }
-                    else if (NNOO == 0x0065){
-                        for(i = 0; i <= (int)OONO; i++) regs[i] = mem.ram[I+i];
+                    break;
+                case(0x0065):
+                    for(i = 0; i <= ((opcode & 0x0F00) >> 8); i++) {
+                        regs[i] = ram[I+i];
                     }
                     break;
                 case(0x0007):
                     regs[OONO] = delay_timer;
                     break;
-                case (0x0008):
+                case (0x0018):
                     sound_timer = regs[OONO];
                     break;
-                case (0x0009):
-                    I = 80 + regs[OONO]*5;
+                case (0x0029):
+                    I = regs[OONO]*0x5;
                     break;
                 case (0x000A):
-                    if(last_key < 16){
-                        regs[OONO] = last_key;
+                    for (int i=0; i < 16; ++i) {
+                        if (keys[i] != 0) {
+                            regs[OONO] = i;
+                            pc += 2;
+                            break;
+                        }
                     }
-                    else pc -= 2;
+                    pc -= 2;
                     break;
-                case (0x000E):
+                case (0x001E):
+                    if(I+regs[OONO] > 0xFFF){
+                        regs[0xF] = 1;
+                    }
+                    else {
+                        regs[0xF] = 0;
+                    }
                     I += regs[OONO];
                     break;
                 default:
+                    printf("unknown opcode %04X",opcode);
+                    exit(3);
                     break;
             }
         break;
         default:
+            printf("unknown opcode %04X",opcode);
+            exit(3);
             break;
     }
+
 
 
 }

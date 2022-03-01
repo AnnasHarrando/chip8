@@ -1,7 +1,5 @@
 #include "CPU.cpp"
-#include "Mem.cpp"
 #include "emu.cpp"
-#include "IO.cpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 
@@ -14,9 +12,8 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    int speed = 700;
 
-    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/test_opcode.ch8", std::ios::binary | std::ios::ate);
+    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/break.ch8", std::ios::binary | std::ios::ate);
 
     if (file.is_open())
     {
@@ -29,7 +26,9 @@ int main(int argc, char *argv[])
         file.read(buffer, size);
         file.close();
 
-        emu test = emu(CPU(), Mem(buffer, size));
+        //Mem memory = Mem(buffer, size);
+
+        emu test = emu(CPU(), buffer, size);
         printf("%i\n",size);
         test.emu_run();
 

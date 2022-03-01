@@ -13,6 +13,8 @@
 class Mem {
 public:
 
+    Mem(char* rom, long rom_size);
+
     uint8_t ram[4096] = {0};
 
     uint8_t fonts [5*16] = {0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -32,14 +34,7 @@ public:
                             0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
                             0xF0, 0x80, 0xF0, 0x80, 0x80};  // F
 
-    Mem(char* rom, long rom_size){
-        for (long i = 0; i < rom_size; ++i) {
-            ram[i + 0x200] = rom[i];
-        }
-        for (uint16_t i = 0; i < 80; i++){
-            ram[0x50 + i] = fonts[i];
-        }
-    };
+
 
     void write(uint16_t addr, uint8_t data);
     uint8_t read(uint16_t addr);

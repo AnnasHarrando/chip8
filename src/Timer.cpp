@@ -2,14 +2,14 @@
 
 class Timer {
 private:
-    unsigned long startTime;
+    clock_t startTime;
 public:
     void start() {
         startTime = clock();
     }
 
-    unsigned long elapsedTime() {
-        return ((unsigned long) clock() - startTime);
+    float elapsedTime() {
+        return ((float)(clock() - startTime))/CLOCKS_PER_SEC;
     }
 
 };

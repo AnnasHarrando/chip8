@@ -7,28 +7,45 @@
 #include <cstdint>
 #include <stack>
 #include <array>
-#include "Mem.h"
+//#include "Mem.h"
 #include <iostream>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_timer.h>
 
 class CPU {
 public:
 
+    bool Drawflag = false;
     uint16_t pc = 0x200;
     uint16_t I = 0;
-    uint8_t regs[16] = {};
+    uint8_t regs[16] = { 0};
     std::stack<uint16_t> stack;
     uint8_t delay_timer = 0;
     uint8_t sound_timer = 0;
-    bool keys[16] = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-    int last_key = 16;
-    bool display[32][64] = {};
+    int keys[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    int display[32][64] = {0};
 
 
-    void GetKey(int key,bool boo);
+    uint8_t keymap[16] = {
+            SDLK_x,
+            SDLK_1,
+            SDLK_2,
+            SDLK_3,
+            SDLK_q,
+            SDLK_w,
+            SDLK_e,
+            SDLK_a,
+            SDLK_s,
+            SDLK_d,
+            SDLK_z,
+            SDLK_c,
+            SDLK_4,
+            SDLK_r,
+            SDLK_f,
+            SDLK_v,
+    };
 
-    void ResetKeys();
-
-    void fetch(Mem mem);
+    void fetch(uint8_t *ram);
 };
 
 
