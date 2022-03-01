@@ -13,7 +13,8 @@ public:
     SDL_Event event;
     CPU cpu;
     //Mem mem;
-    Timer t = Timer();
+    Timer timer = Timer();
+    Timer clock = Timer();
     bool running = true;
 
     SDL_Window* win;
@@ -76,7 +77,8 @@ public:
 
 
 void emu::emu_run(){
-    t.start();
+    timer.start();
+    clock.start();
     while(running){
         cpu.fetch(ram);
         input(&cpu);
@@ -86,16 +88,19 @@ void emu::emu_run(){
             cpu.Drawflag = false;
             DrawScreen(cpu.display);
         }
-
-        if(cpu.delay_timer > 0) cpu.delay_timer--;
-        if(cpu.sound_timer > 0) {
-
-            cpu.sound_timer--;
+        if(clock.elapsedTime() < 0.0014){
+            printf("delay\n");
+            SDL_Delay(1.4-clock.elapsedTime()*1000);
+            clock.start();
         }
-        printf("%.8f\n",t.elapsedTime());
-       // std::string temp;
-       // getline(std::cin, temp);
-        t.start();
+        if(timer.elapsedTime() > 0.016) {
+            if (cpu.delay_timer > 0) cpu.delay_timer--;
+            if (cpu.sound_timer > 0) {
+                cpu.sound_timer--;
+            }
+            timer.start();
+        }
+
     }
 }
 

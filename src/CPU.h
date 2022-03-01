@@ -20,6 +20,8 @@ public:
     uint16_t I = 0;
     uint8_t regs[16] = { 0};
     std::stack<uint16_t> stack;
+    uint16_t Stack[16]{0};
+    uint8_t sp=0;
     uint8_t delay_timer = 0;
     uint8_t sound_timer = 0;
     int keys[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};

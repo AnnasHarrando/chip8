@@ -19,9 +19,22 @@ void CPU::fetch(uint8_t *ram){
     uint16_t NNOO = opcode & 0x00FF;
 
 
-    printf("%04X\n",opcode);
+    //printf("%04X\n",opcode);
     //printf("%i\n",regs[0xF]);
     //printf("%i\n",regs[OONO]);
+    printf("Opcode: %04X ",opcode);
+    printf("PC: %i ",pc);
+    printf("Index: %i\n",I);
+    for (int i=0;i<16;i++){
+        printf("Reg%X:%i ",i,regs[i]);
+    }
+    printf("\n");
+    for (int i=0;i<16;i++){
+        if(keys[i]) printf("Key:%X\n",i);
+    }
+    printf("\n\n");
+
+
 
     pc += 2;
     int i,j;
@@ -39,8 +52,9 @@ void CPU::fetch(uint8_t *ram){
                 Drawflag = true;
             }
             else if(NOOO == 0x000E) {
-                pc = stack.top();
-                stack.pop();
+                --sp;
+                pc = Stack[sp];
+
             }
             else {
                 printf("unknown opcode %04X",opcode);
@@ -51,17 +65,24 @@ void CPU::fetch(uint8_t *ram){
             pc = NNNO;
             break;
         case (0x2000):
-            stack.push(pc);
+            Stack[sp] = pc;
+            ++sp;
             pc = NNNO;
             break;
         case (0x3000):
-            if(regs[OONO] == NNOO) pc += 2;
+            if(regs[OONO] == NNOO) {
+                pc += 2;
+            }
             break;
         case (0x4000):
-            if(regs[OONO] != NNOO) pc += 2;
+            if(regs[OONO] != NNOO) {
+                pc += 2;
+            }
             break;
         case (0x5000):
-            if(regs[ONOO] == regs[OONO]) pc += 2;
+            if(regs[ONOO] == regs[OONO]) {
+                pc += 2;
+            }
             break;
         case (0x6000):
             regs[OONO] = NNOO;
@@ -85,44 +106,49 @@ void CPU::fetch(uint8_t *ram){
                     regs[OONO] ^= regs[ONOO];
                     break;
                 case (0x0004):
-                    //printf("%i\n",regs[OONO]+regs[ONOO]);
-                {
-                    int temp = regs[OONO] + regs[ONOO];
-                    if (temp > 255) {
+                    if (regs[OONO] + regs[ONOO] > 255) {
                         regs[0xF] = 1;
                     } else {
                         regs[0xF] = 0;
                     }
-                    regs[OONO] = temp & 0xFF;
-                }
+                    regs[OONO] += regs[ONOO];
+
                     break;
                 case (0x0005):
 
-                    if(regs[OONO] < regs[ONOO]) regs[0xF] = 0;
-                    else regs[0xF] = 1;
+                    if(regs[OONO] >= regs[ONOO]) {
+                        regs[0xF] = 1;
+                    }
+                    else {
+                        regs[0xF] = 0;
+                    }
                     regs[OONO] -= regs[ONOO];
 
                     break;
                 case (0x0006):
                     regs[0xF] = regs[OONO] & 0x1;
-                    regs[OONO] = regs[OONO]>>1;
+                    regs[OONO] >>= 1;
                     break;
                 case (0x0007):
 
-                    if(regs[ONOO] < regs[OONO]) regs[0xF] = 0;
-                    else regs[0xF] = 1;
+                    if(regs[ONOO] >= regs[OONO]) {
+                        regs[0xF] = 1;
+                    }
+                    else {
+                        regs[0xF] = 0;
+                    }
                     regs[OONO] = regs[ONOO] - regs[OONO];
-
                     break;
                 case (0x000E):
-                    regs[0xF] = regs[OONO] >> 7;
-                    regs[OONO] = regs[OONO]<<1;
+                    regs[0xF] = (regs[OONO] & 0x80) >> 7;
+                    regs[OONO] <<= 1;
                     break;
                 default:
                     printf("unknown opcode %04X",opcode);
                     exit(3);
                     break;
             }
+            break;
         case (0x9000):
             if(regs[ONOO] != regs[OONO]) pc += 2;
             break;
@@ -178,7 +204,6 @@ void CPU::fetch(uint8_t *ram){
                 case(0x0055):
                     for(i = 0; i <= ((opcode & 0x0F00) >> 8); i++) {
                         ram[I+i] = regs[i];
-                        //printf("%i\n",i);
                     }
                     break;
                 case(0x0065):
@@ -193,7 +218,7 @@ void CPU::fetch(uint8_t *ram){
                     sound_timer = regs[OONO];
                     break;
                 case (0x0029):
-                    I = regs[OONO]*0x5;
+                    I = regs[OONO]*5;
                     break;
                 case (0x000A):
                     for (int i=0; i < 16; ++i) {
@@ -206,12 +231,6 @@ void CPU::fetch(uint8_t *ram){
                     pc -= 2;
                     break;
                 case (0x001E):
-                    if(I+regs[OONO] > 0xFFF){
-                        regs[0xF] = 1;
-                    }
-                    else {
-                        regs[0xF] = 0;
-                    }
                     I += regs[OONO];
                     break;
                 default:
@@ -225,7 +244,6 @@ void CPU::fetch(uint8_t *ram){
             exit(3);
             break;
     }
-
 
 
 }
