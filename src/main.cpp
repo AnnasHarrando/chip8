@@ -1,19 +1,14 @@
 #include "CPU.cpp"
 #include "emu.cpp"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
-
-#include <iostream>     // std::cout
+#include <iostream>
 #include <fstream>
-
-
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
 
-    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/Airplane.ch8", std::ios::binary | std::ios::ate);
+    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/invaders.ch8", std::ios::binary | std::ios::ate);
 
     if (file.is_open())
     {
@@ -29,7 +24,6 @@ int main(int argc, char *argv[])
         //Mem memory = Mem(buffer, size);
 
         emu test = emu(CPU(), buffer, size);
-        printf("%i\n",size);
         test.emu_run();
 
         delete[] buffer;

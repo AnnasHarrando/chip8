@@ -1,15 +1,11 @@
 #include "CPU.h"
-//#include "Mem.h"
-#include <stack>
 #include <iostream>
-#include <cstring>
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
-#include <sstream>
+#include <cstdlib>
 
 using namespace std;
 
 void CPU::fetch(uint8_t *ram){
+
     uint16_t opcode = ram[pc] << 8u | ram[pc+1] ;
     uint16_t OOON = opcode & 0xF000;
     uint16_t OONO = (opcode & 0x0F00)>>8;
@@ -17,23 +13,6 @@ void CPU::fetch(uint8_t *ram){
     uint16_t NOOO = opcode & 0x000F;
     uint16_t NNNO = opcode & 0x0FFF;
     uint16_t NNOO = opcode & 0x00FF;
-
-
-    //printf("%04X\n",opcode);
-    //printf("%i\n",regs[0xF]);
-    //printf("%i\n",regs[OONO]);
-    printf("Opcode: %04X ",opcode);
-    printf("PC: %i ",pc);
-    printf("Index: %i\n",I);
-    for (int i=0;i<16;i++){
-        printf("Reg%X:%i ",i,regs[i]);
-    }
-    printf("\n");
-    for (int i=0;i<16;i++){
-        if(keys[i]) printf("Key:%X\n",i);
-    }
-    printf("\n\n");
-
 
 
     pc += 2;
@@ -102,7 +81,6 @@ void CPU::fetch(uint8_t *ram){
                     regs[OONO] &= regs[ONOO];
                     break;
                 case (0x0003):
-                    printf("test\n");
                     regs[OONO] ^= regs[ONOO];
                     break;
                 case (0x0004):

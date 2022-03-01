@@ -1,18 +1,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
-#include <iostream>
-//#include "Mem.cpp"
 #include "CPU.h"
 #include "Timer.cpp"
 #include <cstdint>
-#include <array>
-#include <cstring>
+
 
 class emu {
 public:
     SDL_Event event;
     CPU cpu;
-    //Mem mem;
+
     Timer timer = Timer();
     Timer clock = Timer();
     bool running = true;
@@ -63,9 +60,6 @@ public:
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 320, 160);
         SDL_SetRenderTarget(renderer,texture);
     }
-
-
-
     void emu_run();
 
     void input(CPU *cpu);
@@ -79,20 +73,22 @@ public:
 void emu::emu_run(){
     timer.start();
     clock.start();
+
     while(running){
         cpu.fetch(ram);
         input(&cpu);
-        //printf("%.8f\n",t.elapsedTime());
 
         if(cpu.Drawflag){
             cpu.Drawflag = false;
             DrawScreen(cpu.display);
         }
-        if(clock.elapsedTime() < 0.0014){
+
+        if(clock.elapsedTime() < 0.002){
             printf("delay\n");
-            SDL_Delay(1.4-clock.elapsedTime()*1000);
+            SDL_Delay(2-clock.elapsedTime()*1000);
             clock.start();
         }
+
         if(timer.elapsedTime() > 0.016) {
             if (cpu.delay_timer > 0) cpu.delay_timer--;
             if (cpu.sound_timer > 0) {
