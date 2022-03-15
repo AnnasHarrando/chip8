@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/invaders.ch8", std::ios::binary | std::ios::ate);
+    std::ifstream file("/home/annas/CLionProjects/chip8/src/roms/break.ch8", std::ios::binary | std::ios::ate);
 
     if (file.is_open())
     {

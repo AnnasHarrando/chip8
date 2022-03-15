@@ -17,6 +17,17 @@ public:
     SDL_Window* win;
     SDL_Texture *texture;
     SDL_Renderer * renderer;
+    SDL_Rect *destRect = new SDL_Rect;
+
+    SDL_AudioSpec wavSpec;
+    Uint32 wavLength;
+    Uint8 *wavBuffer;
+    SDL_AudioDeviceID deviceId;
+
+    bool soundOn = false;
+
+
+
 
     uint8_t ram[4096] = {0};
     uint8_t fonts [5*16] = {0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -55,9 +66,12 @@ public:
         }
 
         win = SDL_CreateWindow("sdl2 pixel drawing",
-                               1000, 500,320, 160, 0);
+                               1000, 500,640, 320, 0);
         renderer = SDL_CreateRenderer(win,-1, SDL_RENDERER_ACCELERATED);
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 320, 160);
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 640, 320);
+        SDL_LoadWAV("/home/annas/CLionProjects/chip8/src/beep-02.wav", &wavSpec, &wavBuffer, &wavLength);
+        deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+        SDL_QueueAudio(deviceId, wavBuffer, wavLength);
         SDL_SetRenderTarget(renderer,texture);
     }
     void emu_run();
@@ -75,6 +89,7 @@ void emu::emu_run(){
     clock.start();
 
     while(running){
+        SDL_Delay(1);
         cpu.fetch(ram);
         input(&cpu);
 
@@ -83,39 +98,49 @@ void emu::emu_run(){
             DrawScreen(cpu.display);
         }
 
-        if(clock.elapsedTime() < 0.002){
-            printf("delay\n");
-            SDL_Delay(2-clock.elapsedTime()*1000);
-            clock.start();
-        }
-
-        if(timer.elapsedTime() > 0.016) {
+        if(timer.elapsedTime() > 0.0016){
             if (cpu.delay_timer > 0) cpu.delay_timer--;
             if (cpu.sound_timer > 0) {
-                cpu.sound_timer--;
+                cpu.sound_timer -= 1;
+                SDL_PauseAudioDevice(deviceId, 0);
+                soundOn = true;
+            }
+            else{
+                if(soundOn){
+                    SDL_ClearQueuedAudio(deviceId);
+                    SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+                    soundOn = false;
+                }
             }
             timer.start();
         }
+
+
 
     }
 }
 
 void emu::DrawScreen(int display[32][64]){
+    destRect->x = 0;
+    destRect->y = 0;
+    destRect->w = 10;
+    destRect->h = 10;
     for (int i = 0; i < 64; ++i)
         for (int j = 0; j < 32; j++){
-                for(int k=0;k<5;k++){
-                    for(int l=0;l<5;l++){
-                        if(display[j][i] == 1) {
-                            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                            SDL_RenderDrawPoint(this->renderer, i * 5 + k, j * 5 + l);
-                        }
-                        else {
-                            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-                            SDL_RenderDrawPoint(this->renderer, i * 5 + k, j * 5 + l);
-                        }
-                    }
+            destRect->x = i * 10;
+            destRect->y = j * 10;
 
-                }
+            if(display[j][i] == 1) {
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                SDL_RenderFillRect(renderer, destRect);
+                //SDL_RenderDrawPoint(this->renderer, i * 5 + k, j * 5 + l);
+            }
+            else {
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+                SDL_RenderFillRect(renderer, destRect);
+                //SDL_RenderDrawPoint(this->renderer, i * 5 + k, j * 5 + l);
+            }
+
 
         }
     SDL_RenderPresent(renderer);

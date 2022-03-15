@@ -31,8 +31,8 @@ void CPU::fetch(uint8_t *ram){
                 Drawflag = true;
             }
             else if(NOOO == 0x000E) {
-                --sp;
-                pc = Stack[sp];
+                pc = stack.top();
+                stack.pop();
 
             }
             else {
@@ -44,8 +44,7 @@ void CPU::fetch(uint8_t *ram){
             pc = NNNO;
             break;
         case (0x2000):
-            Stack[sp] = pc;
-            ++sp;
+            stack.push(pc);
             pc = NNNO;
             break;
         case (0x3000):
@@ -222,7 +221,6 @@ void CPU::fetch(uint8_t *ram){
             exit(3);
             break;
     }
-
 
 }
 
